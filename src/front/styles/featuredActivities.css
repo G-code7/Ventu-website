@@ -1,0 +1,13 @@
+.actividades-destacadas {
+    margin: 50px 10px;
+}
+
+.card-tour {
+    border-radius: 10px;
+    overflow: hidden;
+}
+
+.card-tour .card-img-top {
+    border-top-left-radius: 10px;
+    border-top-right-radius: 10px;
+}
