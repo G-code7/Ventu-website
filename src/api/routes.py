@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, Blueprint, jsonify, request, app
-from api.models import db, TourPlan, Client, Provider, User, Reservation , ReservationStatus, Favorite_tour_plan
+from api.models import db, TourPlan, Client, Provider, User, Reservation , ReservationStatus, FavoriteTourPlan 
 from werkzeug.security import generate_password_hash, check_password_hash
 from werkzeug.utils import secure_filename
 from datetime import datetime
@@ -371,14 +371,14 @@ def add_favorite(tour_plan_id):
     if client is None or tour_plan is None:
         return jsonify({"error": "Client or tour plan not found"}), 404
     
-    existing_favorite = Favorite_tour_plan.query.filter_by(client_id=client.id, tour_plan_id=tour_plan.id).first()
+    existing_favorite = FavoriteTourPlan.query.filter_by(client_id=client.id, tour_plan_id=tour_plan.id).first()
     if existing_favorite:
         return jsonify({"error": "Favorite already exists"}), 400
 
-    favorite_tour_plan = Favorite_tour_plan(client_id=client.id, tour_plan_id=tour_plan_id)
-    db.session.add(favorite_tour_plan)
+    new_favorite = FavoriteTourPlan(client_id=client.id, tour_plan_id=tour_plan_id)
+    db.session.add(new_favorite)
     db.session.commit()
-    return jsonify(favorite_tour_plan.tour_plan.serialize()), 201
+    return jsonify(FavoriteTourPlan .tour_plan.serialize()), 201
 
 @api.route('/favorite/client/tourplan/<int:tour_plan_id>', methods=['DELETE'])
 @jwt_required()
@@ -394,7 +394,7 @@ def delete_favorite(tour_plan_id):
     if client is None or tour_plan is None:
         return jsonify({"error": "Client or tour plan not found"}), 404
     
-    existing_favorite = Favorite_tour_plan.query.filter_by(client_id=client.id, tour_plan_id=tour_plan.id).first()
+    existing_favorite = FavoriteTourPlan .query.filter_by(client_id=client.id, tour_plan_id=tour_plan.id).first()
     if not existing_favorite:
         return jsonify({"error": "Favorite not found"}), 404
 
