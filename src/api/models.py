@@ -16,26 +16,27 @@ class User(db.Model):
     status = db.Column(db.String(50), default="active", nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
     phone = db.Column(db.String(50), nullable=True)
-    providers = db.relationship('Provider', back_populates='user', lazy=True)
+    providers = db.relationship('Provider', back_populates='user', uselist=False)
+    clients = db.relationship('Client', back_populates='user', uselist=False)
     
     @validates('role')
     def validate_role(self, key, value):
         allowed_roles = ['provider', 'client']
         if value not in allowed_roles:
-            raise ValueError(f"Invalid role '{value}', allowed roles are: {allowed_roles}")
+            raise ValueError(f"Rol inválido: {value}")
         return value
 
-    def save(self):
-        db.session.add(self)
-        db.session.commit()
-        # Crear un registro asociado en Provider o Client según el rol del usuario
-        if self.role == 'provider':
-            provider = Provider(user_id=self.id)
-            db.session.add(provider)
-        elif self.role == 'client':
-            client = Client(user_id=self.id)
-            db.session.add(client)
-        db.session.commit()
+    # def save(self):
+    #     db.session.add(self)
+    #     db.session.commit()
+    #     # Crear un registro asociado en Provider o Client según el rol del usuario
+    #     if self.role == 'provider':
+    #         provider = Provider(user_id=self.id)
+    #         db.session.add(provider)
+    #     elif self.role == 'client':
+    #         client = Client(user_id=self.id)
+    #         db.session.add(client)
+    #     db.session.commit()
 
     def serialize(self):
         return {
@@ -51,10 +52,9 @@ class User(db.Model):
 class Client(db.Model):
     __tablename__ = 'client'
     id = db.Column(db.Integer, primary_key=True)
-    username = db.Column(db.String(255), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))    
-    user = db.relationship('User', backref='client')
+    user = db.relationship('User', back_populates='clients')
     Favorite_tour_plan = db.relationship('Favorite_tour_plan', back_populates='client', lazy=True)
  
         
@@ -78,7 +78,7 @@ class Provider(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id'), nullable=False)
     created_at = db.Column(db.DateTime, default=lambda: datetime.now(timezone.utc))
-    user = db.relationship(User)
+    user = db.relationship('User', back_populates='providers')
     tour_plans = db.relationship('TourPlan', back_populates='provider', lazy=True)
 
 class TourPlan(db.Model):
@@ -97,7 +97,6 @@ class TourPlan(db.Model):
     provider = db.relationship('Provider')
     Favorite_tour_plan = db.relationship('Favorite_tour_plan', back_populates='tour_plan', lazy=True)
 
-    provider = db.relationship(Provider)
 
 
     def __repr__(self):

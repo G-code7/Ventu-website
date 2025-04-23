@@ -28,6 +28,7 @@ pycryptodome = "*"
 werkzeug = "*"
 "sqlalchemy.orm" = "*"
 wtforms = "*"
+email-validator = "*"
 
 [requires]
 python_version = "3.10"

@@ -67,26 +67,38 @@ def get_me():
 
 @api.route('/register/provider', methods=['POST'])
 def register_provider():
-    data = request.json
-    if not data.get('username') or not data.get('email') or not data.get('password'):
-        return jsonify({"error": "Missing username, email or password"}), 400
-
+    try:
+        data = request.json
+        # Validación básica
+        if not data.get('username') or not data.get('email') or not data.get('password'):
+            return jsonify({"error": "Faltan campos obligatorios"}), 400
+        
+        # Validar si el usuario ya existe
+        if User.query.filter_by(email=data['email']).first():
+            return jsonify({"error": "El correo ya está registrado"}), 400
+        
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({"error": str(e)}), 500
+    
+    # Crear User
     new_user = User(
-        username=data.get('username'),
-        email=data.get('email'),
-        password_hash=generate_password_hash(data.get('password')),
+        username=data['username'],
+        email=data['email'],
+        password_hash=generate_password_hash(data['password']),
+        role='provider',
         phone=data.get('phone'),
-        role='provider'
+        status='active'
     )
-    
     db.session.add(new_user)
-    db.session.commit()
+    db.session.commit()  # Commit para obtener el ID
     
+    # Crear Provider asociado
     new_provider = Provider(user_id=new_user.id)
     db.session.add(new_provider)
     db.session.commit()
     
-    return jsonify({"message": "Provider registered", "id": new_user.id}), 201
+    return jsonify({"message": "Provider registrado", "id": new_user.id}), 201
 
 @api.route('/providers', methods=['GET'])
 def get_providers():
@@ -113,23 +125,28 @@ def delete_provider(provider_id):
 def register_client():
     data = request.json
     if not data.get('username') or not data.get('email') or not data.get('password'):
-        return jsonify({"error": "Missing username, email or password"}), 400
-
+        return jsonify({"error": "Faltan campos obligatorios"}), 400
+    
+    if User.query.filter_by(email=data['email']).first():
+        return jsonify({"error": "El correo ya está registrado"}), 400
+    
     new_user = User(
-        username=data.get('username'),
-        email=data.get('email'),
-        password_hash=generate_password_hash(data.get('password')),
+        username=data['username'],
+        email=data['email'],
+        password_hash=generate_password_hash(data['password']),
+        role='client',
         phone=data.get('phone'),
-        role='client'
+        status='active'
     )
     db.session.add(new_user)
     db.session.commit()
-
-    new_client = Client(user_id=new_user.id, username=new_user.username)
+    
+    # Crear Client asociado
+    new_client = Client(user_id=new_user.id)
     db.session.add(new_client)
     db.session.commit()
-    #new_user.save()  # Se utiliza el método save para manejar la creación
-    return jsonify({"message": "Client registered"}), 201
+    
+    return jsonify({"message": "Client registrado", "id": new_user.id}), 201
 
 @api.route('/clients', methods=['GET'])
 def get_clients():
@@ -215,17 +232,15 @@ def create_tour_plan():
     print(user)
    
     data = request.form
-    print("Received data:", data)
     new_plan = TourPlan(
         title=data.get('title'),
         description=data.get('description'),
-        price=data.get('price'),
-        available_spots=data.get('available_spots'),
-        start_date=data.get('start_date'),
-        end_date=data.get('end_date'),
+        price=float(data.get('price')),
+        available_spots=int(data.get('available_spots')),
+        start_date=datetime.fromisoformat(data.get('start_date')),
+        end_date=datetime.fromisoformat(data.get('end_date')),
         provider_id=provider.id,
         image_url=data.get('image_url')
-
     )
 
     db.session.add(new_plan)

@@ -49,7 +49,7 @@ const InfoTourPlans = () => {
                     <div className="col-10 d-flex align-items-center">
 
                         <i className="fa-solid fa-suitcase me-2" style={{ fontSize: '2rem' }}></i>
-                        <h2 className="text p-2 fw-bold"> Viaje a Canaima {tourPlan.title}</h2>
+                        <h2 className="text p-2 fw-bold"> {tourPlan.title}</h2>
                     </div>
                     {/* Botón de favorito */}
                     <div>
